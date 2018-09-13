@@ -1,0 +1,110 @@
+{
+  "com.badlogic.gdx.graphics.g2d.BitmapFont": {
+    "default-font": {
+      "file": "fonts/algerian_48.fnt"
+    }
+  },
+  "com.badlogic.gdx.graphics.Color": {
+    "white": {
+      "a": 1,
+      "b": 1,
+      "g": 1,
+      "r": 1
+    },
+    "black": {
+      "a": 1,
+      "b": 0,
+      "g": 0,
+      "r": 0
+    },
+    "gray": {
+      "a": 1,
+      "b": 0.5,
+      "g": 0.5,
+      "r": 0.5
+    }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle": {
+    "default": {
+      "down": "button-down",
+      "up": "button",
+      "font": "default-font",
+      "fontColor": "white",
+      "downFontColor": "black",
+      "overFontColor": "gray"
+    }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle": {
+    "default": {
+      "down": "home-down",
+      "up": "home"
+    },
+    "next": {
+      "down": "next-down",
+      "up": "next"
+    },
+    "replay": {
+      "down": "replay-down",
+      "up": "replay"
+    },
+    "defaultball": {
+      "down": "default",
+      "up": "default"
+    },
+    "defaultballselect": {
+      "down": "selectdefault",
+      "up": "selectdefault"
+    },
+    "marbleball": {
+      "down": "marble",
+      "up": "marble"
+    },
+    "marbleballselect": {
+      "down": "selectMarble",
+      "up": "selectMarble"
+    },
+    "marbleballlock": {
+      "down": "lockmarble",
+      "up": "lockmarble"
+    },
+    "gravelball": {
+      "down": "gravel",
+      "up": "gravel"
+    },
+    "gravelballselect": {
+      "down": "selectGravel",
+      "up": "selectGravel"
+    },
+    "gravelballlock": {
+      "down": "lockgravel",
+      "up": "lockgravel"
+    },
+    "woodball": {
+      "down": "wood",
+      "up": "wood"
+    },
+    "woodballselect": {
+      "down": "selectwood",
+      "up": "selectwood"
+    },
+    "woodballlock": {
+      "down": "lockwood",
+      "up": "lockwood"
+    }
+  },
+
+  "com.badlogic.gdx.scenes.scene2d.ui.TextField$TextFieldStyle": {
+    "default": {
+      "selection": "button-down",
+      "background": "button",
+      "font": "default-font",
+      "fontColor": "white"
+    }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle": {
+    "default": {
+      "font": "default-font",
+      "fontColor": "white"
+    }
+  }
+}

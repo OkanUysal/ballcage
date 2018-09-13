@@ -1,0 +1,146 @@
+
+uiskin.png
+size: 2048,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+button
+  rotate: false
+  xy: 2, 30
+  size: 400, 100
+  orig: 400, 100
+  offset: 0, 0
+  index: -1
+button-down
+  rotate: false
+  xy: 504, 832
+  size: 400, 100
+  orig: 400, 100
+  offset: 0, 0
+  index: -1
+default
+  rotate: false
+  xy: 404, 2
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+gravel
+  rotate: false
+  xy: 534, 21
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+home
+  rotate: false
+  xy: 504, 605
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+home-down
+  rotate: false
+  xy: 504, 378
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+lockgravel
+  rotate: false
+  xy: 664, 21
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+lockmarble
+  rotate: false
+  xy: 794, 21
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+lockwood
+  rotate: false
+  xy: 924, 21
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+marble
+  rotate: false
+  xy: 958, 804
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+next
+  rotate: false
+  xy: 504, 151
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+next-down
+  rotate: false
+  xy: 731, 605
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+panel
+  rotate: false
+  xy: 2, 132
+  size: 500, 800
+  orig: 500, 800
+  offset: 0, 0
+  index: -1
+replay
+  rotate: false
+  xy: 731, 378
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+replay-down
+  rotate: false
+  xy: 731, 151
+  size: 225, 225
+  orig: 225, 225
+  offset: 0, 0
+  index: -1
+selectGravel
+  rotate: false
+  xy: 958, 674
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+selectMarble
+  rotate: false
+  xy: 1088, 804
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+selectdefault
+  rotate: false
+  xy: 958, 544
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+selectwood
+  rotate: false
+  xy: 1088, 674
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+wood
+  rotate: false
+  xy: 1218, 804
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
