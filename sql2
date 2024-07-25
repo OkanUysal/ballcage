@@ -1,0 +1,101 @@
+WITH job_intervals AS (
+    SELECT
+        id,
+        created_date AS startjob,
+        CASE
+            WHEN status = 'complete' THEN updated_date
+            ELSE NOW()
+        END AS endjob,
+        DATE(created_date) AS start_date,
+        CASE
+            WHEN status = 'complete' THEN DATE(updated_date)
+            ELSE DATE(NOW())
+        END AS end_date,
+        TIME(created_date) AS start_time,
+        CASE
+            WHEN status = 'complete' THEN TIME(updated_date)
+            ELSE TIME(NOW())
+        END AS end_time,
+        status
+    FROM
+        your_jobs_table
+),
+working_days AS (
+    SELECT
+        date
+    FROM (
+        SELECT DISTINCT DATE(startjob) AS date FROM job_intervals
+        UNION
+        SELECT DISTINCT DATE(endjob) AS date FROM job_intervals
+    ) AS all_dates
+    WHERE
+        WEEKDAY(date) < 5 -- Hafta sonları hariç
+        AND date NOT IN (SELECT holiday_date FROM holidays) -- Tatil günleri hariç
+),
+work_intervals AS (
+    SELECT
+        j.id,
+        j.startjob,
+        j.endjob,
+        j.start_date,
+        j.end_date,
+        CASE
+            WHEN j.start_date = j.end_date THEN
+                TIMESTAMPDIFF(
+                    MINUTE,
+                    GREATEST(TIME(j.startjob), '09:00:00'),
+                    LEAST(TIME(j.endjob), '18:00:00')
+                ) - 
+                CASE
+                    WHEN TIME(j.startjob) < '12:30:00' AND TIME(j.endjob) > '13:30:00' THEN 60
+                    WHEN TIME(j.startjob) < '12:30:00' AND TIME(j.endjob) > '12:30:00' THEN TIMESTAMPDIFF(MINUTE, '12:30:00', TIME(j.endjob))
+                    WHEN TIME(j.startjob) < '13:30:00' AND TIME(j.endjob) > '13:30:00' THEN TIMESTAMPDIFF(MINUTE, TIME(j.startjob), '13:30:00')
+                    ELSE 0
+                END
+            ELSE
+                -- İlk gün
+                TIMESTAMPDIFF(
+                    MINUTE,
+                    GREATEST(TIME(j.startjob), '09:00:00'),
+                    '18:00:00'
+                ) - 
+                CASE
+                    WHEN TIME(j.startjob) < '12:30:00' THEN 60
+                    WHEN TIME(j.startjob) < '13:30:00' THEN TIMESTAMPDIFF(MINUTE, '12:30:00', '13:30:00')
+                    ELSE 0
+                END
+                +
+                -- Tam çalışma günleri
+                (
+                    SELECT 
+                        SUM(540) -- 09:00 - 18:00 arası 540 dakika
+                    FROM working_days wd
+                    WHERE wd.date > j.start_date AND wd.date < j.end_date
+                )
+                +
+                -- Son gün
+                TIMESTAMPDIFF(
+                    MINUTE,
+                    '09:00:00',
+                    LEAST(TIME(j.endjob), '18:00:00')
+                ) - 
+                CASE
+                    WHEN TIME(j.endjob) > '13:30:00' THEN 60
+                    WHEN TIME(j.endjob) > '12:30:00' THEN TIMESTAMPDIFF(MINUTE, '12:30:00', TIME(j.endjob))
+                    ELSE 0
+                END
+        END AS daily_work_minutes
+    FROM
+        job_intervals j
+    JOIN
+        working_days w ON j.start_date = w.date OR j.end_date = w.date
+)
+SELECT
+    id,
+    startjob,
+    endjob,
+    SUM(daily_work_minutes) AS total_working_minutes
+FROM
+    work_intervals
+GROUP BY
+    id, startjob, endjob;
