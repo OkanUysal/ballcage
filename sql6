@@ -1,0 +1,88 @@
+WITH job_intervals AS (
+    SELECT
+        id,
+        created_date AS startjob,
+        CASE
+            WHEN status = 'complete' THEN updated_date
+            ELSE SYSTIMESTAMP
+        END AS endjob,
+        TRUNC(created_date) AS start_date,
+        TRUNC(CASE WHEN status = 'complete' THEN updated_date ELSE SYSTIMESTAMP END) AS end_date,
+        TO_CHAR(created_date, 'HH24:MI:SS') AS start_time,
+        TO_CHAR(CASE WHEN status = 'complete' THEN updated_date ELSE SYSTIMESTAMP END, 'HH24:MI:SS') AS end_time,
+        status
+    FROM
+        your_jobs_table
+),
+all_dates AS (
+    SELECT DISTINCT TRUNC(startjob) AS working_date FROM job_intervals
+    UNION
+    SELECT DISTINCT TRUNC(endjob) AS working_date FROM job_intervals
+),
+working_days AS (
+    SELECT
+        working_date
+    FROM
+        all_dates
+    WHERE
+        TO_CHAR(working_date, 'D') NOT IN ('1', '7') -- Hafta sonları hariç (1=Pazar, 7=Cumartesi)
+        AND working_date NOT IN (SELECT holiday_date FROM holidays) -- Tatil günleri hariç
+),
+work_intervals AS (
+    SELECT
+        j.id,
+        j.startjob,
+        j.endjob,
+        j.start_date,
+        j.end_date,
+        CASE
+            WHEN j.start_date = j.end_date THEN
+                (LEAST(j.endjob, TRUNC(j.endjob) + INTERVAL '18' HOUR) - GREATEST(j.startjob, TRUNC(j.startjob) + INTERVAL '9' HOUR)) * 24 * 60
+                - CASE
+                    WHEN j.start_time < '12:30:00' AND j.end_time > '13:30:00' THEN 60
+                    WHEN j.start_time < '12:30:00' AND j.end_time > '12:30:00' THEN 
+                        (EXTRACT(HOUR FROM j.endjob - TRUNC(j.endjob) - INTERVAL '12' HOUR) * 60 +
+                         EXTRACT(MINUTE FROM j.endjob - TRUNC(j.endjob) - INTERVAL '12' HOUR))
+                    WHEN j.start_time < '13:30:00' AND j.end_time > '13:30:00' THEN 
+                        (EXTRACT(HOUR FROM TRUNC(j.startjob) + INTERVAL '13:30' HOUR TO MINUTE - j.startjob) * 60 +
+                         EXTRACT(MINUTE FROM TRUNC(j.startjob) + INTERVAL '13:30' HOUR TO MINUTE - j.startjob))
+                    ELSE 0
+                END
+            ELSE
+                -- İlk gün
+                (TRUNC(j.startjob) + INTERVAL '18' HOUR - GREATEST(j.startjob, TRUNC(j.startjob) + INTERVAL '9' HOUR)) * 24 * 60
+                - CASE
+                    WHEN j.start_time < '12:30:00' THEN 60
+                    WHEN j.start_time < '13:30:00' THEN 60
+                    ELSE 0
+                END
+                +
+                -- Tam çalışma günleri
+                (SELECT NVL(SUM(540), 0)
+                 FROM working_days wd
+                 WHERE wd.working_date > j.start_date AND wd.working_date < j.end_date)
+                +
+                -- Son gün
+                (LEAST(j.endjob, TRUNC(j.endjob) + INTERVAL '18' HOUR) - TRUNC(j.endjob) - INTERVAL '9' HOUR) * 24 * 60
+                - CASE
+                    WHEN j.end_time > '13:30:00' THEN 60
+                    WHEN j.end_time > '12:30:00' THEN 
+                        (EXTRACT(HOUR FROM j.endjob - TRUNC(j.endjob) - INTERVAL '12' HOUR) * 60 +
+                         EXTRACT(MINUTE FROM j.endjob - TRUNC(j.endjob) - INTERVAL '12' HOUR))
+                    ELSE 0
+                END
+        END AS daily_work_minutes
+    FROM
+        job_intervals j
+    JOIN
+        working_days w ON j.start_date = w.working_date OR j.end_date = w.working_date
+)
+SELECT
+    id,
+    startjob,
+    endjob,
+    SUM(daily_work_minutes) AS total_working_minutes
+FROM
+    work_intervals
+GROUP BY
+    id, startjob, endjob;
