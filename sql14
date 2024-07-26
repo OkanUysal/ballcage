@@ -1,0 +1,54 @@
+WITH working_days AS (
+    SELECT 
+        id,
+        created_date,
+        CASE 
+            WHEN status = 'COMPLETED' THEN updated_date 
+            ELSE SYSDATE 
+        END AS end_date
+    FROM 
+        your_table
+),
+filtered_days AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        created_date + (LEVEL - 1) AS work_day
+    FROM 
+        working_days
+    CONNECT BY 
+        LEVEL <= end_date - created_date + 1
+        AND PRIOR id = id
+        AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
+),
+working_hours AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        work_day,
+        CASE
+            WHEN work_day = TRUNC(created_date) THEN GREATEST(created_date, work_day + 9/24)
+            ELSE work_day + 9/24
+        END AS start_time,
+        CASE
+            WHEN work_day = TRUNC(end_date) THEN LEAST(end_date, work_day + 18/24)
+            ELSE work_day + 18/24
+        END AS end_time
+    FROM 
+        filtered_days
+    WHERE 
+        TO_CHAR(work_day, 'DY', 'NLS_DATE_LANGUAGE=AMERICAN') NOT IN ('SAT', 'SUN')
+)
+SELECT 
+    id,
+    created_date,
+    end_date AS updated_date,
+    CASE
+        WHEN end_date = updated_date THEN 'COMPLETED'
+        ELSE 'OTHER'
+    END AS status,
+    SUM(
+        CASE
+            WHEN start
