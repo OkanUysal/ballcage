@@ -18,7 +18,7 @@ filtered_days AS (
     FROM 
         working_days
     CONNECT BY 
-        LEVEL <= end_date - created_date + 1
+        LEVEL <= TRUNC(end_date) - TRUNC(created_date) + 1
         AND PRIOR id = id
         AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
 ),
@@ -51,4 +51,19 @@ SELECT
     END AS status,
     SUM(
         CASE
-            WHEN start
+            WHEN start_time < work_day + 12.5/24 AND end_time > work_day + 13.5/24 THEN 
+                (work_day + 12.5/24 - start_time) + (end_time - (work_day + 13.5/24))
+            WHEN start_time < work_day + 12.5/24 THEN 
+                (work_day + 12.5/24 - start_time)
+            WHEN end_time > work_day + 13.5/24 THEN 
+                (end_time - (work_day + 13.5/24))
+            ELSE 
+                (end_time - start_time)
+        END
+    ) * 24 AS working_hours
+FROM 
+    working_hours
+GROUP BY 
+    id, created_date, end_date
+ORDER BY 
+    id;
