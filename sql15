@@ -1,0 +1,88 @@
+WITH working_days AS (
+    SELECT 
+        id,
+        created_date,
+        CASE 
+            WHEN status = 'COMPLETED' THEN updated_date 
+            ELSE SYSDATE 
+        END AS end_date
+    FROM 
+        your_table
+),
+days_series AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        created_date + (LEVEL - 1) AS work_day
+    FROM 
+        working_days
+    CONNECT BY 
+        LEVEL <= TRUNC(end_date) - TRUNC(created_date) + 1
+        AND PRIOR id = id
+        AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
+),
+filtered_days AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        work_day
+    FROM 
+        days_series
+    WHERE 
+        TO_CHAR(work_day, 'DY', 'NLS_DATE_LANGUAGE=AMERICAN') NOT IN ('SAT', 'SUN')
+),
+working_hours AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        work_day,
+        CASE
+            WHEN work_day = TRUNC(created_date) THEN GREATEST(created_date, work_day + INTERVAL '9' HOUR)
+            ELSE work_day + INTERVAL '9' HOUR
+        END AS start_time,
+        CASE
+            WHEN work_day = TRUNC(end_date) THEN LEAST(end_date, work_day + INTERVAL '18' HOUR)
+            ELSE work_day + INTERVAL '18' HOUR
+        END AS end_time
+    FROM 
+        filtered_days
+),
+working_minutes AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        work_day,
+        start_time,
+        end_time,
+        CASE
+            WHEN start_time < work_day + INTERVAL '12:30' HOUR TO MINUTE AND end_time > work_day + INTERVAL '13:30' HOUR TO MINUTE THEN 
+                (work_day + INTERVAL '12:30' HOUR TO MINUTE - start_time) + (end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE))
+            WHEN start_time < work_day + INTERVAL '12:30' HOUR TO MINUTE THEN 
+                (work_day + INTERVAL '12:30' HOUR TO MINUTE - start_time)
+            WHEN end_time > work_day + INTERVAL '13:30' HOUR TO MINUTE THEN 
+                (end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE))
+            ELSE 
+                (end_time - start_time)
+        END AS work_interval
+    FROM 
+        working_hours
+)
+SELECT 
+    id,
+    created_date,
+    end_date AS updated_date,
+    CASE
+        WHEN end_date = updated_date THEN 'COMPLETED'
+        ELSE 'OTHER'
+    END AS status,
+    SUM(EXTRACT(MINUTE FROM work_interval) + EXTRACT(HOUR FROM work_interval) * 60) AS working_minutes
+FROM 
+    working_minutes
+GROUP BY 
+    id, created_date, end_date
+ORDER BY 
+    id;
