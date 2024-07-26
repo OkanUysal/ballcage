@@ -64,11 +64,11 @@ work_intervals AS (
         end_time,
         CASE
             WHEN start_time < work_day + INTERVAL '12:30' HOUR TO MINUTE AND end_time > work_day + INTERVAL '13:30' HOUR TO MINUTE THEN 
-                (work_day + INTERVAL '12:30' HOUR TO MINUTE - start_time) + (end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE)) - (INTERVAL '1' HOUR)
+                (work_day + INTERVAL '12:30' HOUR TO MINUTE - start_time) + (end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE) - INTERVAL '1' HOUR)
             WHEN start_time < work_day + INTERVAL '12:30' HOUR TO MINUTE THEN 
                 work_day + INTERVAL '12:30' HOUR TO MINUTE - start_time
             WHEN end_time > work_day + INTERVAL '13:30' HOUR TO MINUTE THEN 
-                end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE) - (INTERVAL '1' HOUR)
+                end_time - (work_day + INTERVAL '13:30' HOUR TO MINUTE) - INTERVAL '1' HOUR
             ELSE 
                 end_time - start_time
         END AS work_interval
@@ -80,9 +80,10 @@ work_minutes AS (
         id,
         created_date,
         end_date,
-        EXTRACT(DAY FROM work_interval) * 1440 + 
-        EXTRACT(HOUR FROM work_interval) * 60 + 
-        EXTRACT(MINUTE FROM work_interval) AS work_minutes
+        work_day,
+        start_time,
+        end_time,
+        EXTRACT(HOUR FROM work_interval) * 60 + EXTRACT(MINUTE FROM work_interval) AS work_minutes
     FROM 
         work_intervals
 )
