@@ -1,0 +1,66 @@
+WITH working_days AS (
+    SELECT 
+        id,
+        created_date,
+        NVL(updated_date, CASE WHEN status = 'COMPLETED' THEN updated_date ELSE SYSDATE END) AS end_date
+    FROM 
+        your_table
+),
+filtered_days AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        created_date + (LEVEL - 1) AS work_day
+    FROM 
+        working_days
+    CONNECT BY 
+        LEVEL <= end_date - created_date + 1
+        AND PRIOR id = id
+        AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
+    WHERE 
+        TO_CHAR(created_date + (LEVEL - 1), 'DY', 'NLS_DATE_LANGUAGE=AMERICAN') NOT IN ('SAT', 'SUN')
+),
+working_hours AS (
+    SELECT 
+        id,
+        created_date,
+        end_date,
+        work_day,
+        CASE
+            WHEN work_day = TRUNC(created_date) THEN GREATEST(created_date, work_day + 9/24)
+            ELSE work_day + 9/24
+        END AS start_time,
+        CASE
+            WHEN work_day = TRUNC(end_date) THEN LEAST(end_date, work_day + 18/24)
+            ELSE work_day + 18/24
+        END AS end_time
+    FROM 
+        filtered_days
+)
+SELECT 
+    id,
+    created_date,
+    end_date AS updated_date,
+    CASE
+        WHEN end_date = updated_date THEN 'COMPLETED'
+        ELSE 'OTHER'
+    END AS status,
+    SUM(
+        CASE
+            WHEN start_time < work_day + 12.5/24 AND end_time > work_day + 13.5/24 THEN 
+                (work_day + 12.5/24 - start_time) + (end_time - (work_day + 13.5/24))
+            WHEN start_time < work_day + 12.5/24 THEN 
+                (work_day + 12.5/24 - start_time)
+            WHEN end_time > work_day + 13.5/24 THEN 
+                (end_time - (work_day + 13.5/24))
+            ELSE 
+                (end_time - start_time)
+        END
+    ) * 24 AS working_hours
+FROM 
+    working_hours
+GROUP BY 
+    id, created_date, end_date, updated_date
+ORDER BY 
+    id;
