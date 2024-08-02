@@ -1,0 +1,93 @@
+public class ConverterInfo {
+    private Class<?> sourceType;
+    private Class<?> targetType;
+    private Converter<?, ?> converter;
+
+    public ConverterInfo(Class<?> sourceType, Class<?> targetType, Converter<?, ?> converter) {
+        this.sourceType = sourceType;
+        this.targetType = targetType;
+        this.converter = converter;
+    }
+
+    // Getters and Setters
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public Class<?> getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(Class<?> targetType) {
+        this.targetType = targetType;
+    }
+
+    public Converter<?, ?> getConverter() {
+        return converter;
+    }
+
+    public void setConverter(Converter<?, ?> converter) {
+        this.converter = converter;
+    }
+}
+
+
+
+
+
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
+
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
+public class ConverterListerBeanPostProcessor implements BeanPostProcessor {
+
+    private List<ConverterInfo> converters = new ArrayList<>();
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if (bean instanceof Converter) {
+            Converter<?, ?> converter = (Converter<?, ?>) bean;
+            Class<?> sourceType = (Class<?>) ((ParameterizedType) converter.getClass()
+                    .getGenericInterfaces()[0]).getActualTypeArguments()[0];
+            Class<?> targetType = (Class<?>) ((ParameterizedType) converter.getClass()
+                    .getGenericInterfaces()[0]).getActualTypeArguments()[1];
+            converters.add(new ConverterInfo(sourceType, targetType, converter));
+        }
+        return bean;
+    }
+
+    public List<ConverterInfo> getConverters() {
+        return converters;
+    }
+}
+
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+public class ConverterController {
+
+    @Autowired
+    private ConverterListerBeanPostProcessor converterListerBeanPostProcessor;
+
+    @GetMapping("/converters")
+    public List<ConverterInfo> listConverters() {
+        return converterListerBeanPostProcessor.getConverters();
+    }
+}
