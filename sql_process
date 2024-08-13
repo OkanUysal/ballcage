@@ -1,0 +1,16 @@
+SELECT 
+    p.id AS process_id,
+    p.status AS process_status,
+    p.created_date,
+    COUNT(t.id) AS task_return_count
+FROM 
+    process p
+JOIN 
+    task t ON p.id = t.process_id
+WHERE 
+    p.created_date BETWEEN '2023-01-01' AND '2023-12-31'  -- Tarih aralığını buraya girin
+    AND t.status = 'returned'
+GROUP BY 
+    p.id, p.status, p.created_date
+HAVING 
+    COUNT(t.id) > 0;
