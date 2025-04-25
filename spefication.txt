@@ -1,0 +1,64 @@
+Evet, JPA (Java Persistence API) ile bunu Specification kullanarak yazabiliriz. İki farklı Variable kaydının aynı Process'e ait olup her iki koşulu da sağladığını kontrol etmemiz gerekiyor.
+
+Örnek yapı:
+
+Process entity'si @OneToMany ilişkisiyle variables alanına sahip.
+
+Variable entity'si type ve value alanlarına sahip.
+
+
+1. Entity örnekleri:
+
+@Entity
+public class Process {
+    @Id
+    private Long id;
+
+    private String name;
+
+    @OneToMany(mappedBy = "process", fetch = FetchType.LAZY)
+    private List<Variable> variables;
+}
+
+@Entity
+public class Variable {
+    @Id
+    private Long id;
+
+    private String type;
+
+    private String value;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Process process;
+}
+
+2. Specification ile sorgu:
+
+public class ProcessSpecifications {
+    public static Specification<Process> hasVariable(String type, String value) {
+        return (root, query, builder) -> {
+            // Join to variables
+            Join<Process, Variable> join = root.join("variables", JoinType.INNER);
+            return builder.and(
+                builder.equal(join.get("type"), type),
+                builder.equal(join.get("value"), value)
+            );
+        };
+    }
+
+    public static Specification<Process> hasVariablesOfTypesAndValues() {
+        return Specification.where(hasVariable("abc", "xyz"))
+                            .and(hasVariable("abc2", "xyz2"));
+    }
+}
+
+3. Kullanımı:
+
+List<Process> results = processRepository.findAll(ProcessSpecifications.hasVariablesOfTypesAndValues());
+
+Bu yapı, hem "abc"="xyz" hem de "abc2"="xyz2" olan Variable kayıtları aynı Process altında bulunuyorsa o Process'i getirir.
+
+İstersen criteriaQuery.distinct(true) ekleyerek sonuçların tekrarsız gelmesini de sağlayabiliriz. Yardımcı olayım mı?
+
