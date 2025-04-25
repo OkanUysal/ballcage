@@ -1,0 +1,42 @@
+public static Specification<Process> hasVariablesWithGroupByHaving() {
+    return (root, query, builder) -> {
+        // GroupBy ve Having kullanmak için query'nin select ve groupBy'ını elle tanımlamalıyız
+        query.groupBy(root.get("id"));
+        query.select(root.get("id")).distinct(true);
+
+        // Join
+        Join<Process, Variable> variables = root.join("variables", JoinType.INNER);
+
+        // SUM(CASE WHEN v.type = ... AND v.value = ... THEN 1 ELSE 0 END)
+        Expression<Long> hasFirstVariable = builder.sum(
+            builder.<Long>selectCase()
+                .when(
+                    builder.and(
+                        builder.equal(variables.get("type"), "abc"),
+                        builder.equal(variables.get("value"), "xyz")
+                    ),
+                    1L
+                )
+                .otherwise(0L)
+        );
+
+        Expression<Long> hasSecondVariable = builder.sum(
+            builder.<Long>selectCase()
+                .when(
+                    builder.and(
+                        builder.equal(variables.get("type"), "abc2"),
+                        builder.equal(variables.get("value"), "xyz2")
+                    ),
+                    1L
+                )
+                .otherwise(0L)
+        );
+
+        query.having(
+            builder.greaterThan(hasFirstVariable, 0L),
+            builder.greaterThan(hasSecondVariable, 0L)
+        );
+
+        return builder.conjunction(); // Filtreleme having içinde yapıldı, burada filtre yok
+    };
+}
