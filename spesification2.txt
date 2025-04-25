@@ -1,0 +1,21 @@
+public static Specification<Process> hasVariableExists(String type, String value) {
+    return (root, query, builder) -> {
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<Variable> subRoot = subquery.from(Variable.class);
+
+        subquery.select(builder.literal(1L))
+                .where(
+                    builder.equal(subRoot.get("process"), root),
+                    builder.equal(subRoot.get("type"), type),
+                    builder.equal(subRoot.get("value"), value)
+                );
+
+        return builder.exists(subquery);
+    };
+}
+
+public static Specification<Process> hasVariablesOfTypesAndValuesOptimized() {
+    return Specification
+            .where(hasVariableExists("abc", "xyz"))
+            .and(hasVariableExists("abc2", "xyz2"));
+}
