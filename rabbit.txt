@@ -1,0 +1,26 @@
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000   # 1 saniye
+          max-attempts: 10         # En fazla 10 kez dene
+          max-interval: 10000      # En fazla 10 saniyeye kadar aralıkla dene
+          multiplier: 2            # Her denemede bekleme süresini 2 ile çarp
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 5
+        multiplier: 2
+
+spring:
+  rabbitmq:
+    requested-heartbeat: 30  # 30 saniyede bir heartbeat
+    publisher-confirm-type: correlated
+    publisher-returns: true
