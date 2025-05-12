@@ -1,0 +1,74 @@
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
+
+public class JsonTreeSelectorApp extends Application {
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("JSON Dosya Seçici");
+
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Bir Klasör Seçin");
+
+        File selectedDir = directoryChooser.showDialog(primaryStage);
+        if (selectedDir == null) {
+            return;  // Kullanıcı iptal etti
+        }
+
+        CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>(selectedDir.getName());
+        rootItem.setExpanded(true);
+        buildJsonTree(selectedDir, rootItem);
+
+        TreeView<String> treeView = new TreeView<>(rootItem);
+        treeView.setCellFactory(CheckBoxTreeCell.forTreeView());
+
+        BorderPane layout = new BorderPane();
+        layout.setCenter(treeView);
+
+        Scene scene = new Scene(layout, 500, 600);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void buildJsonTree(File dir, CheckBoxTreeItem<String> parentItem) {
+        File[] files = dir.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                CheckBoxTreeItem<String> dirItem = new CheckBoxTreeItem<>(file.getName());
+                parentItem.getChildren().add(dirItem);
+                buildJsonTree(file, dirItem);
+
+                // Klasör seçilince çocuklarını da seçsin
+                dirItem.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+                    setAllChildrenSelected(dirItem, isSelected);
+                });
+
+            } else if (file.getName().toLowerCase().endsWith(".json")) {
+                CheckBoxTreeItem<String> jsonItem = new CheckBoxTreeItem<>(file.getName());
+                parentItem.getChildren().add(jsonItem);
+            }
+        }
+    }
+
+    private void setAllChildrenSelected(CheckBoxTreeItem<String> parent, boolean selected) {
+        for (TreeItem<String> child : parent.getChildren()) {
+            if (child instanceof CheckBoxTreeItem) {
+                ((CheckBoxTreeItem<String>) child).setSelected(selected);
+                setAllChildrenSelected((CheckBoxTreeItem<String>) child, selected);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
