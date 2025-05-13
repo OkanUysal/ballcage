@@ -1,0 +1,26 @@
+import javax.swing.tree.DefaultMutableTreeNode;
+
+public class CheckBoxTreeNode extends DefaultMutableTreeNode {
+    private boolean selected;
+
+    public CheckBoxTreeNode(String userObject) {
+        super(userObject);
+        this.selected = false;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        // Alt düğümleri de güncelle
+        if (children != null) {
+            for (Object child : children) {
+                if (child instanceof CheckBoxTreeNode) {
+                    ((CheckBoxTreeNode) child).setSelected(selected);
+                }
+            }
+        }
+    }
+}
