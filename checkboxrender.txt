@@ -1,0 +1,58 @@
+import javax.swing.*;
+import javax.swing.tree.*;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+
+public class CheckBoxNodeRenderer extends JPanel implements TreeCellRenderer {
+    private JCheckBox checkBox;
+
+    public CheckBoxNodeRenderer() {
+        setLayout(new BorderLayout());
+        checkBox = new JCheckBox();
+        add(checkBox, BorderLayout.CENTER);
+        setOpaque(false);
+    }
+
+    public Component getTreeCellRendererComponent(JTree tree, Object value,
+            boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        
+        if (value instanceof CheckBoxTreeNode) {
+            CheckBoxTreeNode node = (CheckBoxTreeNode) value;
+            checkBox.setText(node.getUserObject().toString());
+            checkBox.setSelected(node.isSelected());
+        }
+        return this;
+    }
+}
+
+class CheckBoxNodeEditor extends AbstractCellEditor implements TreeCellEditor {
+    private CheckBoxTreeNode node;
+    private JCheckBox checkBox;
+
+    public CheckBoxNodeEditor(JTree tree) {
+        checkBox = new JCheckBox();
+        checkBox.addActionListener(e -> {
+            if (node != null) {
+                boolean selected = checkBox.isSelected();
+                node.setSelected(selected);
+                fireEditingStopped();
+                tree.updateUI(); // UI'yı güncelle
+            }
+        });
+    }
+
+    public Component getTreeCellEditorComponent(JTree tree, Object value,
+            boolean selected, boolean expanded, boolean leaf, int row) {
+        
+        if (value instanceof CheckBoxTreeNode) {
+            node = (CheckBoxTreeNode) value;
+            checkBox.setText(node.getUserObject().toString());
+            checkBox.setSelected(node.isSelected());
+        }
+        return checkBox;
+    }
+
+    public Object getCellEditorValue() {
+        return node;
+    }
+}
