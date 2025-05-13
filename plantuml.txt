@@ -1,0 +1,36 @@
+import net.sourceforge.plantuml.SourceStringReader;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+public class PlantUMLPreview {
+
+    public static void showDiagramFromString(String umlSource) {
+        try {
+            SourceStringReader reader = new SourceStringReader(umlSource);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+            // Render UML to PNG in-memory
+            String desc = reader.generateImage(os);
+            os.close();
+
+            // Create icon from byte array
+            byte[] imageData = os.toByteArray();
+            ImageIcon icon = new ImageIcon(imageData);
+            JLabel label = new JLabel(icon);
+
+            JScrollPane scrollPane = new JScrollPane(label);
+            JDialog dialog = new JDialog((Frame) null, "PlantUML Preview", true);
+            dialog.getContentPane().add(scrollPane);
+            dialog.setSize(600, 400);
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "UML gösterimi başarısız.");
+        }
+    }
+}
