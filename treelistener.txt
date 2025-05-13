@@ -1,0 +1,26 @@
+tree.addMouseListener(new MouseAdapter() {
+    @Override
+    public void mousePressed(MouseEvent e) {
+        TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+        if (path == null) return;
+
+        Rectangle bounds = tree.getPathBounds(path);
+        if (bounds == null) return;
+
+        int checkboxWidth = 20; // yaklaşık checkbox genişliği
+        if (e.getX() > bounds.x + checkboxWidth) {
+            // metne tıklanmış demektir
+            Object nodeObj = path.getLastPathComponent();
+            if (nodeObj instanceof TriStateTreeNode node) {
+                File file = (File) node.getUserObject();
+                if (file.getName().endsWith(".puml")) {
+                    showPlantUMLPopup(file);
+                }
+            }
+        } else {
+            // checkbox tıklanmış, seçim değiştir
+            tree.setSelectionPath(path);
+            tree.startEditingAtPath(path); // checkbox toggle için editor tetikle
+        }
+    }
+});
