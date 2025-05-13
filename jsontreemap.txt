@@ -1,0 +1,48 @@
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+
+public class JsonFileTreeApp {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("JSON Dosya Seçici");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(500, 600);
+
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+            int result = chooser.showOpenDialog(null);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedDir = chooser.getSelectedFile();
+
+                CheckBoxTreeNode rootNode = new CheckBoxTreeNode(selectedDir.getName());
+                buildTree(selectedDir, rootNode);
+
+                JTree tree = new JTree(rootNode);
+                tree.setCellRenderer(new CheckBoxNodeRenderer());
+                tree.setCellEditor(new CheckBoxNodeEditor(tree));
+                tree.setEditable(true);
+
+                frame.add(new JScrollPane(tree));
+                frame.setVisible(true);
+            }
+        });
+    }
+
+    private static void buildTree(File dir, CheckBoxTreeNode parent) {
+        File[] files = dir.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                CheckBoxTreeNode dirNode = new CheckBoxTreeNode(file.getName());
+                parent.add(dirNode);
+                buildTree(file, dirNode);
+            } else if (file.getName().toLowerCase().endsWith(".json")) {
+                CheckBoxTreeNode fileNode = new CheckBoxTreeNode(file.getName());
+                parent.add(fileNode);
+            }
+        }
+    }
+}
