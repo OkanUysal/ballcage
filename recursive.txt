@@ -1,0 +1,30 @@
+WITH RECURSIVE parent_chain AS (
+    -- İlk adım: Başlangıç process
+    SELECT p.*
+    FROM process p
+    WHERE p.id = :processId
+
+    UNION ALL
+
+    -- Yukarı doğru parent’ları bul
+    SELECT parent.*
+    FROM process parent
+    INNER JOIN parent_chain child ON parent.id = child.parent_id
+),
+full_tree AS (
+    -- root’u bulduktan sonra aşağıya doğru tüm alt node’ları çek
+    SELECT p.*
+    FROM process p
+    WHERE p.id = (SELECT id FROM parent_chain ORDER BY parent_id NULLS FIRST LIMIT 1)
+
+    UNION ALL
+
+    SELECT child.*
+    FROM process child
+    JOIN full_tree parent ON child.parent_id = parent.id
+)
+SELECT 
+    f.*,
+    t.type_name
+FROM full_tree f
+LEFT JOIN process_type t ON f.type_code = t.type_code;
