@@ -1,0 +1,17 @@
+// varsayalım ki sorgudan List<Object[]> döndü
+List<Object[]> rows = processRepository.getRecursiveResult(rootId);
+
+List<ProcessNode> nodeList = new ArrayList<>();
+Map<Long, ProcessNode> nodeMap = new HashMap<>();
+
+for (Object[] row : rows) {
+    Long id = ((BigDecimal) row[0]).longValue();
+    Long parentId = row[1] != null ? ((BigDecimal) row[1]).longValue() : null;
+    String status = (String) row[2];
+    String typeCode = (String) row[3];
+    Integer level = ((BigDecimal) row[4]).intValue();
+
+    ProcessNode node = new ProcessNode(id, parentId, status, typeCode, level);
+    nodeList.add(node);
+    nodeMap.put(id, node);
+}
