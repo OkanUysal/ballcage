@@ -1,0 +1,9 @@
+$user = "KULLANICI"
+$pass = "SIFRE"
+$db   = "TNS_ADI"
+
+# SQLPlus'a komut gönderip çıktıyı al
+$output = echo "set heading off`n set feedback off`n SELECT * FROM TABLO WHERE ROWNUM < 5;`n exit" | sqlplus -s $user/$pass@$db
+
+# Çıktıyı ekrana yaz
+$output
